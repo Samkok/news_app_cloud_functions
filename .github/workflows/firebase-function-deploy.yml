@@ -23,6 +23,10 @@ jobs:
         with:
           node-version: '18'  # Use the Node.js version that matches Firebase functions
 
+      # Install Firebase CLI globally
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
       # Install dependencies
       - name: Install dependencies
         run: npm install
