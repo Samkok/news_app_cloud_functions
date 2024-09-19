@@ -31,11 +31,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # Authenticate with Firebase using secrets stored in GitHub
-      - name: Authenticate to Firebase
-        run: firebase auth:login:ci --token ${{ secrets.FIREBASE_TOKEN }}
-
       # Deploy Firebase Functions
       - name: Deploy Firebase Functions
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: cd functions && firebase deploy --only functions
 
