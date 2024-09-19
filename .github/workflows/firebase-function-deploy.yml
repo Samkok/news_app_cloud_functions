@@ -1,0 +1,37 @@
+name: Deploy Firebase Functions
+
+# Controls when the workflow will run
+on:
+  push:
+    branches:
+      - main    # Triggers the workflow on push to the 'main' branch
+  workflow_dispatch:  # Allows manual triggering
+
+# Workflow jobs
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Set up Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'  # Use the Node.js version that matches Firebase functions
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Authenticate with Firebase using secrets stored in GitHub
+      - name: Authenticate to Firebase
+        run: firebase auth:login:ci --token ${{ secrets.FIREBASE_TOKEN }}
+
+      # Deploy Firebase Functions
+      - name: Deploy Firebase Functions
+        run: cd functions && firebase deploy --only functions
+
