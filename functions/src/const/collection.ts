@@ -3,4 +3,7 @@ export const Collection = {
   articles: "articles",
   categories: "categories",
   bookmarks: "bookmarks",
+  follows: "follows",
+  userFollowersMap: "userFollowersMap",
+  followers: "followers",
 };

@@ -73,7 +73,7 @@ export const getUserFromToken = async (request: Request) => {
   try {
     const idToken = request.headers.authorization?.split("Bearer ")[1];
     if (!idToken) {
-      return "Unauthorized";
+      throw Error("Unauthorized");
     }
 
     const decodedToken = await auth.verifyIdToken(idToken);
@@ -82,6 +82,6 @@ export const getUserFromToken = async (request: Request) => {
 
     return userRecode;
   } catch (err) {
-    return "Unauthorized";
+    return String(err);
   }
 };

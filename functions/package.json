@@ -9,7 +9,9 @@
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
+    "deploy-firestore-rule": "firebase deploy --only firestore:rules",
     "local": "firebase serve --only functions",
+    "local-all": "firebase serve",
     "logs": "firebase functions:log"
   },
   "engines": {

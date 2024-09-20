@@ -1,10 +1,10 @@
-import {DocumentReference, Timestamp} from "firebase-admin/firestore";
+import {Timestamp} from "firebase-admin/firestore";
 
 export interface ArticleModel {
     title: string;
     content: string;
-    category?: DocumentReference;
-    channel: DocumentReference;
+    category?: string;
+    channel: string;
     cover: string;
     publishedDate: Timestamp;
     updatedDate: Timestamp;

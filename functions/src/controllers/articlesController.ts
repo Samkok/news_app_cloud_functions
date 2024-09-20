@@ -8,6 +8,7 @@ import {ArticleRequestModel} from "../models/article/article_request_model";
 import {Collection} from "../const/collection";
 import {SuccessResponseModel} from "../models/success_response_model";
 import {getUserFromToken} from "./authController";
+import {UserRecord} from "firebase-admin/auth";
 
 export const getAllArticlesController = async (request: Request, response: Response) => {
   try {
@@ -21,18 +22,18 @@ export const getAllArticlesController = async (request: Request, response: Respo
 
     for (const doc of snapshot.docs) {
       const artData = doc.data();
-      const channelRef = artData.channel;
+      const channelId = artData.channel;
       let channelData = null;
-      if (channelRef) {
-        const channelDoc = await channelRef.get();
+      if (channelId) {
+        const channelDoc = await db.collection(Collection.users).doc(channelId).get();
         const id = channelDoc.id;
         channelData = channelDoc.exists ? {id: id, ...channelDoc.data()} : null;
       }
 
-      const categoryRef = artData.category;
+      const categoryId = artData.category;
       let categoryData = null;
-      if (categoryRef) {
-        const categoryDoc = await categoryRef.get();
+      if (categoryId) {
+        const categoryDoc = await db.collection(Collection.categories).doc(categoryId).get();
         const id = categoryDoc.id;
         categoryData = categoryDoc.exists ? {id: id, ...categoryDoc.data()} : null;
       }
@@ -77,19 +78,13 @@ export const createArticleController = async (request: Request, response: Respon
       return;
     }
 
-    const idToken = request.headers.authorization?.split("Bearer ")[1];
-    if (!idToken) {
-      response.send("Unauthorized");
-      return;
-    }
+    const userRecord = await getUserFromToken(request);
 
-    const userRecode = await getUserFromToken(request);
-
-    if (userRecode == "Unauthorized") {
+    if (!(userRecord instanceof UserRecord)) {
       throw Error("Invalid token");
     }
 
-    const channelRef = db.doc(`users/${userRecode.uid}`);
+    const channelRef = db.doc(`${Collection.users}/${userRecord.uid}`);
     const channelDoc = await channelRef.get();
     if (!channelDoc.exists) {
       const errorMsg: BaseResponseModel = {
@@ -114,7 +109,7 @@ export const createArticleController = async (request: Request, response: Respon
     const coverUrl = await uploadImageService({
       filePath: cover,
       collection: Collection.articles,
-      id: userRecode.uid,
+      id: userRecord.uid,
     });
 
     const publishedDate = Timestamp.now();
@@ -124,8 +119,8 @@ export const createArticleController = async (request: Request, response: Respon
     const articleData: ArticleModel = {
       title: title,
       content: content,
-      channel: channelRef,
-      category: categoryRef,
+      channel: userRecord.uid,
+      category: category,
       cover: coverUrl,
       publishedDate: publishedDate,
       updatedDate: updatedDate,
@@ -143,7 +138,11 @@ export const createArticleController = async (request: Request, response: Respon
         response.status(500).send(err);
       });
   } catch (err) {
-    response.send(err);
+    const errorMsg: BaseResponseModel = {
+      statusCode: 404,
+      message: String(err),
+    };
+    response.status(500).send(errorMsg);
   }
 };
 
@@ -175,10 +174,16 @@ export const updateArticleController = async (request: Request, response: Respon
     if (content) updateData.title = content;
     if (category) {
       const categoryRef = db.doc(`${Collection.categories}/${category}`);
-      const cateogryDoc = await categoryRef.get();
-      if (cateogryDoc.exists) {
-        updateData.category = categoryRef;
+      const categoryDoc = await categoryRef.get();
+      if (!categoryDoc.exists) {
+        const errorMsg: BaseResponseModel = {
+          statusCode: 400,
+          message: "You refer to category that doesn't exist",
+        };
+        response.status(400).send(errorMsg);
+        return;
       }
+      updateData.catorory = category;
     }
 
     const updatedDate = Timestamp.now();

@@ -5,6 +5,8 @@ import {Collection} from "../const/collection";
 import {Timestamp} from "firebase-admin/firestore";
 import {SuccessResponseModel} from "../models/success_response_model";
 import {getUserFromToken} from "./authController";
+import {UserRecord} from "firebase-admin/auth";
+import {BookmarkModel} from "../models/user/bookmark_model";
 
 export const updateUserController = async (request : Request, response: Response) => {
   try {
@@ -46,16 +48,10 @@ export const createBookMarkController = async (request: Request, response: Respo
       throw Error("Missing required field: articleId, userId");
     }
 
-    const idToken = request.headers.authorization?.split("Bearer ")[1];
-    if (!idToken) {
-      response.send("Unauthorized");
-      return;
-    }
-
     const userRecode = await getUserFromToken(request);
 
-    if (userRecode == "Unauthorized") {
-      throw Error("Invalid token");
+    if (!(userRecode instanceof UserRecord)) {
+      throw Error(userRecode);
     }
 
     const artRef = db.collection(Collection.articles).doc(articleId);
@@ -85,8 +81,8 @@ export const createBookMarkController = async (request: Request, response: Respo
 
     for (const doc of bookmarkDoc.docs) {
       const bookmarkData = doc.data();
-      const bookmarkArticleRef = bookmarkData.article;
-      if (bookmarkArticleRef.path === artRef.path) {
+      const bookmarkArticle = bookmarkData.article;
+      if (bookmarkArticle === articleId) {
         const errRes: BaseResponseModel = ({
           statusCode: 405,
           message: "Already marked",
@@ -96,10 +92,11 @@ export const createBookMarkController = async (request: Request, response: Respo
       }
     }
 
-    bookmarkRef.add({
-      article: artRef,
+    const bookmark : BookmarkModel = {
+      articleId: articleId,
       markedDate: Timestamp.now(),
-    }).then((doc) => {
+    };
+    bookmarkRef.add(bookmark).then((doc) => {
       const success : SuccessResponseModel = {
         statusCode: 200,
         message: "Bookmarks added successfully",
@@ -128,8 +125,8 @@ export const getBookMarksOfUserController = async (request: Request, response: R
 
     const userRecode = await getUserFromToken(request);
 
-    if (userRecode == "Unauthorized") {
-      throw Error("Invalid token");
+    if (!(userRecode instanceof UserRecord)) {
+      throw Error(userRecode);
     }
     const userRef = db.collection(Collection.users).doc(userRecode.uid);
 
@@ -152,7 +149,7 @@ export const getBookMarksOfUserController = async (request: Request, response: R
       const bookmarkData = bookmarkDoc.data();
       const markedDate = bookmarkData.markedDate.toDate().toLocaleDateString();
 
-      const articleBookmark = await getBookmarkArticle(bookmarkData.article.id);
+      const articleBookmark = await getBookmarkArticle(bookmarkData.article);
 
       bookmarks.push({
         id: bookmarkDoc.id,
@@ -183,19 +180,13 @@ export const unmarkArticleController = async (request: Request, response: Respon
       throw Error("Missing required field: articleId");
     }
 
-    const idToken = request.headers.authorization?.split("Bearer ")[1];
-    if (!idToken) {
-      response.send("Unauthorized");
-      return;
+    const userRecord = await getUserFromToken(request);
+
+    if (!(userRecord instanceof UserRecord)) {
+      throw Error(userRecord);
     }
 
-    const userRecode = await getUserFromToken(request);
-
-    if (userRecode == "Unauthorized") {
-      throw Error("Invalid token");
-    }
-
-    const userRef = db.collection(Collection.users).doc(userRecode.uid);
+    const userRef = db.collection(Collection.users).doc(userRecord.uid);
     const userDoc = await userRef.get();
     if (!userDoc.exists) {
       const errRes: BaseResponseModel = ({
@@ -232,6 +223,7 @@ export const unmarkArticleController = async (request: Request, response: Respon
     response.send(errRes);
   }
 };
+
 
 const getBookmarkArticle = async (articleId: string) => {
   try {
