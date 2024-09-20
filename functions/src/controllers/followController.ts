@@ -5,7 +5,7 @@ import {BaseResponseModel} from "../models/base_response_model";
 import {getUserFromToken} from "./authController";
 import {Request, Response} from "express";
 import {FollowModel} from "../models/follow/follow_model";
-import {CollectionReference, Timestamp} from "firebase-admin/firestore";
+import {Timestamp} from "firebase-admin/firestore";
 import {SuccessResponseModel} from "../models/success_response_model";
 
 
