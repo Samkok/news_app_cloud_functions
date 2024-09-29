@@ -33,11 +33,11 @@ jobs:
       - name: Install Firebase CLI
         run: cd functions/ &&  npm install -g firebase-tools
 
-      - name: Install eslint
-        run: cd functions/ && npm install --save-dev eslint@latest
+      # - name: Install eslint
+      #   run: cd functions/ && npm install --save-dev eslint@latest
 
-      - name: Check eslint version
-        run: cd functions/ &&  npx eslint -v
+      # - name: Check eslint version
+      #   run: cd functions/ &&  npx eslint -v
 
       # Install dependencies
       - name: Install dependencies
