@@ -44,5 +44,5 @@ jobs:
       - name: Deploy Firebase Functions
         env:
           FIREBASE_TOKEN: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-        run: firebase deploy --only functions
+        run: npm run-script deploy
 
