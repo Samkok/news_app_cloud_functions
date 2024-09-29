@@ -38,12 +38,14 @@ jobs:
 
       # Choose environment based on branch
       - name: Select Firebase project environment
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: |
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
             echo "Deploying to production environment"
             firebase use default
           elif [ "${{ github.ref }}" == "refs/heads/uat" ]; then
-            echo "Deploying to staging environment"
+            echo "Deploying to uat environment"
             firebase use uat
           else
             echo "No environment matched for this branch"
