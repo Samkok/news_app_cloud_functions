@@ -12,6 +12,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: functions
+
     steps:
       # Checkout the repository
       - name: Checkout repository
@@ -29,11 +33,11 @@ jobs:
 
       # Install dependencies
       - name: Install dependencies
-        run: cd functions/ && npm install
+        run: npm install
 
       # Deploy Firebase Functions
       - name: Deploy Firebase Functions
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-        run: cd functions/ && npm run-script deploy
+        run: npm run-script deploy
 
