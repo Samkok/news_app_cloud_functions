@@ -24,7 +24,7 @@ jobs:
           node-version: '18'  # Use the Node.js version that matches Firebase functions
 
       - name: Go to functions directory
-        run: cd functions/
+        run: cd functions/ && pwd
 
       # Install Firebase CLI globally
       - name: Install Firebase CLI
