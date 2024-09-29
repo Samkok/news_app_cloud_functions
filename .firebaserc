@@ -1,5 +1,9 @@
 {
   "projects": {
-    "default": "news-app-a038e"
-  }
+    "default": "news-app-a038e",
+    "uat": "news-app-uat"
+  },
+  "targets": {},
+  "etags": {},
+  "dataconnectEmulatorConfig": {}
 }

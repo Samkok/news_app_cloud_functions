@@ -35,6 +35,20 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # Choose environment based on branch
+      - name: Select Firebase project environment
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "Deploying to production environment"
+            firebase use default
+          elif [ "${{ github.ref }}" == "refs/heads/uat" ]; then
+            echo "Deploying to staging environment"
+            firebase use uat
+          else
+            echo "No environment matched for this branch"
+            exit 1
+          fi
+
       # Deploy Firebase Functions
       - name: Deploy Firebase Functions
         env:

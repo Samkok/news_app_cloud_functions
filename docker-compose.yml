@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  flutter-app:
+    image: news-app-cloud-function
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    ports:
+      - "8081:8080"
+    working_dir: /app
+    entrypoint: ["/bin/bash"]
