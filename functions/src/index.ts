@@ -11,14 +11,13 @@ import {getAllArticles, createArticle, updateArticle, deleteArticle} from "./art
 import {signUpUser} from "./auth";
 import {createCategory, deleteCategory, getAllCategories} from "./category";
 import {followOrUnfollowUserOrChannel, getIfUserFollowChannel, onfollow, onUnfollow} from "./follow";
-import {createBookMark, getBookMarksOfUser, unmarkArticle, updateUser} from "./user";
+import {getBookMarksOfUser, markOrUnmarkArticle, updateUser} from "./user";
 
 export {
   // Auth / User
   signUpUser,
   updateUser,
-  createBookMark,
-  unmarkArticle,
+  markOrUnmarkArticle,
   getBookMarksOfUser,
   // Follows
   followOrUnfollowUserOrChannel,

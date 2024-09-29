@@ -1,10 +1,8 @@
 import {functions} from "./config";
-import {createBookMarkController, getBookMarksOfUserController, unmarkArticleController, updateUserController} from "./controllers/userController";
+import {markOrUnmarkArticleController, getBookMarksOfUserController, updateUserController} from "./controllers/userController";
 
 export const updateUser = functions.https.onRequest(updateUserController);
 
-export const createBookMark = functions.https.onRequest(createBookMarkController);
-
-export const unmarkArticle = functions.https.onRequest(unmarkArticleController);
+export const markOrUnmarkArticle = functions.https.onRequest(markOrUnmarkArticleController);
 
 export const getBookMarksOfUser = functions.https.onRequest(getBookMarksOfUserController);

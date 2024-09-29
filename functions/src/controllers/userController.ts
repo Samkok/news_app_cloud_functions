@@ -41,7 +41,7 @@ export const updateUserController = async (request : Request, response: Response
   }
 };
 
-export const createBookMarkController = async (request: Request, response: Response) => {
+export const markOrUnmarkArticleController = async (request: Request, response: Response) => {
   try {
     const {articleId} = request.body;
     if (!articleId) {
@@ -83,11 +83,16 @@ export const createBookMarkController = async (request: Request, response: Respo
       const bookmarkData = doc.data();
       const bookmarkArticle = bookmarkData.article;
       if (bookmarkArticle === articleId) {
-        const errRes: BaseResponseModel = ({
-          statusCode: 405,
-          message: "Already marked",
-        });
-        response.send(errRes);
+        bookmarkRef.doc(doc.id).delete()
+          .then(() => {
+            const success : BaseResponseModel = {
+              statusCode: 200,
+              message: "Bookmark is unmarked now",
+            };
+            response.send(success);
+          }).catch((err) => {
+            throw Error(err);
+          });
         return;
       }
     }
@@ -172,58 +177,6 @@ export const getBookMarksOfUserController = async (request: Request, response: R
     response.send(errRes);
   }
 };
-
-export const unmarkArticleController = async (request: Request, response: Response) => {
-  try {
-    const {bookmarkId} = request.body;
-    if (!bookmarkId) {
-      throw Error("Missing required field: articleId");
-    }
-
-    const userRecord = await getUserFromToken(request);
-
-    if (!(userRecord instanceof UserRecord)) {
-      throw Error(userRecord);
-    }
-
-    const userRef = db.collection(Collection.users).doc(userRecord.uid);
-    const userDoc = await userRef.get();
-    if (!userDoc.exists) {
-      const errRes: BaseResponseModel = ({
-        statusCode: 404,
-        message: String("User not exist"),
-      });
-      response.send(errRes);
-    }
-
-    const bookmarkRef = userRef.collection(Collection.bookmarks).doc(bookmarkId);
-    const bookmarkDoc = await bookmarkRef.get();
-    if (!bookmarkDoc.exists) {
-      const errRes: BaseResponseModel = ({
-        statusCode: 404,
-        message: String("Bookmark not exist"),
-      });
-      response.send(errRes);
-    }
-    bookmarkRef.delete()
-      .then(() => {
-        const success : BaseResponseModel = {
-          statusCode: 200,
-          message: "Bookmark is unmarked now",
-        };
-        response.send(success);
-      }).catch((err) => {
-        throw Error(err);
-      });
-  } catch (err) {
-    const errRes: BaseResponseModel = ({
-      statusCode: 500,
-      message: String(err),
-    });
-    response.send(errRes);
-  }
-};
-
 
 const getBookmarkArticle = async (articleId: string) => {
   try {
