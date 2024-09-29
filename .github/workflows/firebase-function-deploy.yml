@@ -11,8 +11,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      WORKING_DIR: ./functions
 
     steps:
       # Checkout the repository
@@ -37,15 +35,15 @@ jobs:
 
       # Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: cd functions/ && npm install
 
       - name: Set up Google Application Credentials
-        run: echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > "${{ github.workspace }}/firebase-service-account.json"
+        run: cd functions/ && echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > "${{ github.workspace }}/firebase-service-account.json"
 
 
       # Deploy Firebase Functions
       - name: Deploy Firebase Functions
         env:
           GOOGLE_APPLICATION_CREDENTIALS: "${{ github.workspace }}/firebase-service-account.json"
-        run: npm run-script deploy
+        run: cd functions/ && npm run-script deploy
 
