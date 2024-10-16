@@ -28,13 +28,15 @@ jobs:
         with:
           node-version: '18'  # Use the Node.js version that matches Firebase functions
 
-      - name: Set Environment Variables
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS_UAT: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }}
-          GOOGLE_APPLICATION_CREDENTIALS_PRO: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+      - name: Set GOOGLE_APPLICATION_CREDENTIALS for uat
         run: |
-            echo "Environment variables set"
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }}" > ${{ github.workspace }}/credentials.json
+        if: github.ref == 'refs/heads/uat' # Use staging branch for uat
   
+      - name: Set GOOGLE_APPLICATION_CREDENTIALS for Production
+        run: |
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > ${{ github.workspace }}/credentials.json
+        if: github.ref == 'refs/heads/main' # Use main branch for production
 
       # Install Firebase CLI globally
       - name: Install Firebase CLI
@@ -48,6 +50,7 @@ jobs:
       - name: Select Firebase project environment
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/credentials.json
         run: |
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
             echo "Deploying to production environment"
