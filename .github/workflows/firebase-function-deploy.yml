@@ -46,22 +46,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Set GOOGLE_APPLICATION_CREDENTIALS based on environment
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS_UAT: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }}
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-        run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "Using production credentials"
-            echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > service-account-pro.json
-            echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/service-account-pro.json" >> $GITHUB_ENV
-          else
-            echo "Using uat credentials"
-            echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }}" > service-account-uat.json
-            echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/service-account-uat.json" >> $GITHUB_ENV
-          fi
-
-
       # Choose environment based on branch
       - name: Select Firebase project environment
         env:
@@ -82,6 +66,17 @@ jobs:
       - name: Deploy Firebase Functions
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
-        run: npm run-script deploy
+          GOOGLE_APPLICATION_CREDENTIALS_UAT: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "Using production credentials"
+            echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > service-account-pro.json
+            echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/service-account-pro.json" >> $GITHUB_ENV
+          else
+            echo "Using uat credentials"
+            echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }}" > service-account-uat.json
+            echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/service-account-uat.json" >> $GITHUB_ENV
+          fi
+          npm run-script deploy
 
