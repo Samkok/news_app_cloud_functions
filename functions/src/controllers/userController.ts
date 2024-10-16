@@ -9,7 +9,7 @@ import {checkAuth} from "../services/authService";
 
 export const getUserInfoController = async (request: Request, response: Response) => {
   try {
-    const {userId} = request.body;
+    const userId = request.query.userId as string;
     if (!userId) {
       throw Error("Missing required field, userId");
     }

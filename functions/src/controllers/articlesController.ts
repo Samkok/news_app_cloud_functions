@@ -67,73 +67,136 @@ export const getAllArticlesController = async (request: Request, response: Respo
 
 export const getArticleController = async (request: Request, response: Response) => {
   try {
-    const {articleId} = request.body;
+    // Validate input
+    const articleId = request.query.articleId as string;
     if (!articleId) {
-      throw Error("Missing required field: articleId");
+      response.status(400).send({
+        statusCode: 400,
+        message: "Missing required field: articleId",
+      });
     }
+
+    // Fetch the article document
     const articleRef = db.collection(Collection.articles).doc(articleId);
     const articleDoc = await articleRef.get();
     if (!articleDoc.exists) {
-      const errorMsg: BaseResponseModel = {
+      response.status(404).send({
         statusCode: 404,
         message: "Article not found",
-      };
-      response.status(404).send(errorMsg);
-      return;
+      });
     }
 
     const artData = articleDoc.data()!;
-    const channelId = artData.channel;
-    let channelData = null;
-    if (channelId) {
-      const channelDoc = await db.collection(Collection.users).doc(channelId).get();
-      const id = channelDoc.id;
-      channelData = channelDoc.exists ? {id: id, ...channelDoc.data()} : null;
-    }
+    const {channel: channelId, category: categoryId, publishedDate, updatedDate} = artData;
 
-    const categoryId = artData.category;
-    let categoryData = null;
-    if (categoryId) {
-      const categoryDoc = await db.collection(Collection.categories).doc(categoryId).get();
-      const id = categoryDoc.id;
-      categoryData = categoryDoc.exists ? {id: id, ...categoryDoc.data()} : null;
-    }
+    // Fetch channel and category concurrently
+    const [channelDoc, categoryDoc] = await Promise.all([
+      channelId ? db.collection(Collection.users).doc(channelId).get() : Promise.resolve(null),
+      categoryId ? db.collection(Collection.categories).doc(categoryId).get() : Promise.resolve(null),
+    ]);
 
-    const publishedDate = artData.publishedDate;
-    let publishedDateFormated = null;
-    if (publishedDate) {
-      publishedDateFormated = publishedDate.toDate().toLocaleString();
-    }
+    const channelData = channelDoc && channelDoc.exists ? {id: channelDoc.id, ...channelDoc.data()} : null;
+    const categoryData = categoryDoc && categoryDoc.exists ? {id: categoryDoc.id, ...categoryDoc.data()} : null;
 
-    const updatedDate = artData.updatedDate;
-    let updatedDateFormated = null;
-    if (updatedDate) {
-      updatedDateFormated = updatedDate.toDate().toLocaleString();
-    }
+    // Format dates if available
+    const publishedDateFormatted = publishedDate && publishedDate.toDate ? publishedDate.toDate().toLocaleString() : null;
+    const updatedDateFormatted = updatedDate && updatedDate.toDate ? updatedDate.toDate().toLocaleString() : null;
 
+    // Construct response object
     const articleData = {
       id: articleDoc.id,
       ...artData,
       channel: channelData,
       category: categoryData,
-      publishedDate: publishedDateFormated,
-      updatedDate: updatedDateFormated,
+      publishedDate: publishedDateFormatted,
+      updatedDate: updatedDateFormatted,
     };
 
-    const success : SuccessResponseModel = {
+    response.status(200).send({
       statusCode: 200,
       message: "success",
       data: articleData,
-    };
-    response.send(success);
+    });
   } catch (err) {
-    const errorMsg: BaseResponseModel = {
-      statusCode: 500,
-      message: String(err),
-    };
-    response.status(500).send(errorMsg);
+    if (!response.headersSent) { // Ensure headers haven't been sent yet
+      response.status(500).send({
+        statusCode: 500,
+        message: String(err),
+      });
+    }
   }
 };
+
+
+// export const getArticleController = async (request: Request, response: Response) => {
+//   try {
+//     const {articleId} = request.body;
+//     if (!articleId) {
+//       throw Error("Missing required field: articleId");
+//     }
+//     const articleRef = db.collection(Collection.articles).doc(articleId);
+//     const articleDoc = await articleRef.get();
+//     if (!articleDoc.exists) {
+//       const errorMsg: BaseResponseModel = {
+//         statusCode: 404,
+//         message: "Article not found",
+//       };
+//       response.status(404).send(errorMsg);
+//       return;
+//     }
+
+//     const artData = articleDoc.data()!;
+//     const channelId = artData.channel;
+//     let channelData = null;
+//     if (channelId) {
+//       const channelDoc = await db.collection(Collection.users).doc(channelId).get();
+//       const id = channelDoc.id;
+//       channelData = channelDoc.exists ? {id: id, ...channelDoc.data()} : null;
+//     }
+
+//     const categoryId = artData.category;
+//     let categoryData = null;
+//     if (categoryId) {
+//       const categoryDoc = await db.collection(Collection.categories).doc(categoryId).get();
+//       const id = categoryDoc.id;
+//       categoryData = categoryDoc.exists ? {id: id, ...categoryDoc.data()} : null;
+//     }
+
+//     const publishedDate = artData.publishedDate;
+//     let publishedDateFormated = null;
+//     if (publishedDate) {
+//       publishedDateFormated = publishedDate.toDate().toLocaleString();
+//     }
+
+//     const updatedDate = artData.updatedDate;
+//     let updatedDateFormated = null;
+//     if (updatedDate) {
+//       updatedDateFormated = updatedDate.toDate().toLocaleString();
+//     }
+
+//     const articleData = {
+//       id: articleDoc.id,
+//       ...artData,
+//       channel: channelData,
+//       category: categoryData,
+//       publishedDate: publishedDateFormated,
+//       updatedDate: updatedDateFormated,
+//     };
+
+//     const success : SuccessResponseModel = {
+//       statusCode: 200,
+//       message: "success",
+//       data: articleData,
+//     };
+//     response.send(success);
+//   } catch (err) {
+//     const errorMsg: BaseResponseModel = {
+//       statusCode: 500,
+//       message: String(err),
+//     };
+//     response.status(500).send(errorMsg);
+//   }
+// };
 
 export const createArticleController = async (request: Request, response: Response) => {
   try {
