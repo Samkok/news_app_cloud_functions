@@ -1,6 +1,6 @@
 import {Request} from "express";
 import {auth} from "../config";
-import { UserRecord } from "firebase-admin/auth";
+import {UserRecord} from "firebase-admin/auth";
 
 export const checkAuth = async (request: Request) : Promise<UserRecord> => {
   const userRecord = await getUserFromToken(request);
