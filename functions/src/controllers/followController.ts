@@ -1,23 +1,18 @@
-import {UserRecord} from "firebase-admin/auth";
 import {db} from "../config";
 import {Collection} from "../const/collection";
 import {BaseResponseModel} from "../models/base_response_model";
-import {getUserFromToken} from "./authController";
 import {Request, Response} from "express";
 import {FollowModel} from "../models/follow/follow_model";
 import {Timestamp} from "firebase-admin/firestore";
 import {SuccessResponseModel} from "../models/success_response_model";
+import {checkAuth} from "../services/authService";
 
 
 export const followOrUnfollowUserOrChannelController = async (request: Request, response: Response) => {
   try {
     const {followedId} = request.body;
 
-    const userRecord = await getUserFromToken(request);
-
-    if (!(userRecord instanceof UserRecord)) {
-      throw Error(userRecord);
-    }
+    const userRecord = await checkAuth(request);
 
     if (userRecord.uid == followedId) {
       throw Error("You can't follow yourself");
@@ -87,11 +82,7 @@ export const getIfUserFollowChannelController = async (request: Request, respons
       throw Error("Missing required field: followedId");
     }
 
-    const userRecord = await getUserFromToken(request);
-
-    if (!(userRecord instanceof UserRecord)) {
-      throw Error("Invalid token");
-    }
+    const userRecord = await checkAuth(request);
 
     const userRef = db.collection(Collection.users).doc(followedId);
     const userDoc = await userRef.get();

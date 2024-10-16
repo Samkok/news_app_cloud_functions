@@ -4,18 +4,74 @@ import {db} from "../config";
 import {Collection} from "../const/collection";
 import {Timestamp} from "firebase-admin/firestore";
 import {SuccessResponseModel} from "../models/success_response_model";
-import {getUserFromToken} from "./authController";
-import {UserRecord} from "firebase-admin/auth";
 import {BookmarkModel} from "../models/user/bookmark_model";
+import {checkAuth} from "../services/authService";
+
+export const getUserInfoController = async (request: Request, response: Response) => {
+  try {
+    const {userId} = request.body;
+    if (!userId) {
+      throw Error("Missing required field, userId");
+    }
+
+    const userRef = db.collection(Collection.users).doc(userId);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
+      throw Error("User doesn't exists");
+    }
+    // Authentication and Authorization
+    const userRecord = await checkAuth(request);
+    if (userDoc.id != userRecord.uid) {
+      const errorMsg: BaseResponseModel = {
+        statusCode: 401,
+        message: "Unauthorized",
+      };
+      response.status(404).send(errorMsg);
+      return;
+    }
+
+    const userData = userDoc.data()!;
+    const user = {
+      id: userDoc.id,
+      ...userData,
+      createdAt: userData.createdAt.toDate().toLocaleString(),
+    };
+
+    const success : SuccessResponseModel = {
+      statusCode: 200,
+      message: "success",
+      data: user,
+    };
+    response.send(success);
+  } catch (err) {
+    const errRes: BaseResponseModel = ({
+      statusCode: 500,
+      message: String(err),
+    });
+    response.send(errRes);
+  }
+};
 
 export const updateUserController = async (request : Request, response: Response) => {
   try {
     const {id, firstName, lastName, bio} = request.body;
-
+    if (!id) {
+      throw Error("Missing required field, userId");
+    }
     const userRef = db.collection(Collection.users).doc(id);
     const userDoc = await userRef.get();
     if (!userDoc.exists) {
       throw Error("User doesn't exists");
+    }
+    // Authentication and Authorization
+    const userRecord = await checkAuth(request);
+    if (userDoc.id != userRecord.uid) {
+      const errorMsg: BaseResponseModel = {
+        statusCode: 401,
+        message: "Unauthorized",
+      };
+      response.status(404).send(errorMsg);
+      return;
     }
 
     const updateData : any = { };
@@ -48,11 +104,7 @@ export const markOrUnmarkArticleController = async (request: Request, response: 
       throw Error("Missing required field: articleId, userId");
     }
 
-    const userRecode = await getUserFromToken(request);
-
-    if (!(userRecode instanceof UserRecord)) {
-      throw Error(userRecode);
-    }
+    const userRecord = await checkAuth(request);
 
     const artRef = db.collection(Collection.articles).doc(articleId);
     const artDoc = await artRef.get();
@@ -65,7 +117,7 @@ export const markOrUnmarkArticleController = async (request: Request, response: 
       return;
     }
 
-    const userRef = db.collection(Collection.users).doc(userRecode.uid);
+    const userRef = db.collection(Collection.users).doc(userRecord.uid);
     const userDoc = await userRef.get();
     if (!userDoc.exists) {
       const errRes: BaseResponseModel = ({
@@ -122,18 +174,8 @@ export const markOrUnmarkArticleController = async (request: Request, response: 
 
 export const getBookMarksOfUserController = async (request: Request, response: Response) => {
   try {
-    const idToken = request.headers.authorization?.split("Bearer ")[1];
-    if (!idToken) {
-      response.send("Unauthorized");
-      return;
-    }
-
-    const userRecode = await getUserFromToken(request);
-
-    if (!(userRecode instanceof UserRecord)) {
-      throw Error(userRecode);
-    }
-    const userRef = db.collection(Collection.users).doc(userRecode.uid);
+    const userRecord = await checkAuth(request);
+    const userRef = db.collection(Collection.users).doc(userRecord.uid);
 
     const userDoc = await userRef.get();
     if (!userDoc.exists) {
@@ -142,6 +184,16 @@ export const getBookMarksOfUserController = async (request: Request, response: R
         message: "User not found",
       });
       response.send(errRes);
+      return;
+    }
+
+    // Authentication and Authorization
+    if (userDoc.id != userRecord.uid) {
+      const errorMsg: BaseResponseModel = {
+        statusCode: 401,
+        message: "Unauthorized",
+      };
+      response.status(404).send(errorMsg);
       return;
     }
 

@@ -68,20 +68,3 @@ export const signUpUserController = async (request: Request, response: Response)
     response.send(errRes);
   }
 };
-
-export const getUserFromToken = async (request: Request) => {
-  try {
-    const idToken = request.headers.authorization?.split("Bearer ")[1];
-    if (!idToken) {
-      throw Error("Unauthorized");
-    }
-
-    const decodedToken = await auth.verifyIdToken(idToken);
-    const uid = decodedToken.uid;
-    const userRecode = await auth.getUser(uid);
-
-    return userRecode;
-  } catch (err) {
-    return String(err);
-  }
-};

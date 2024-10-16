@@ -7,8 +7,7 @@ import {BaseResponseModel} from "../models/base_response_model";
 import {ArticleRequestModel} from "../models/article/article_request_model";
 import {Collection} from "../const/collection";
 import {SuccessResponseModel} from "../models/success_response_model";
-import {getUserFromToken} from "./authController";
-import {UserRecord} from "firebase-admin/auth";
+import {checkAuth} from "../services/authService";
 
 export const getAllArticlesController = async (request: Request, response: Response) => {
   try {
@@ -66,6 +65,76 @@ export const getAllArticlesController = async (request: Request, response: Respo
   }
 };
 
+export const getArticleController = async (request: Request, response: Response) => {
+  try {
+    const {articleId} = request.body;
+    if (!articleId) {
+      throw Error("Missing required field: articleId");
+    }
+    const articleRef = db.collection(Collection.articles).doc(articleId);
+    const articleDoc = await articleRef.get();
+    if (!articleDoc.exists) {
+      const errorMsg: BaseResponseModel = {
+        statusCode: 404,
+        message: "Article not found",
+      };
+      response.status(404).send(errorMsg);
+      return;
+    }
+
+    const artData = articleDoc.data()!;
+    const channelId = artData.channel;
+    let channelData = null;
+    if (channelId) {
+      const channelDoc = await db.collection(Collection.users).doc(channelId).get();
+      const id = channelDoc.id;
+      channelData = channelDoc.exists ? {id: id, ...channelDoc.data()} : null;
+    }
+
+    const categoryId = artData.category;
+    let categoryData = null;
+    if (categoryId) {
+      const categoryDoc = await db.collection(Collection.categories).doc(categoryId).get();
+      const id = categoryDoc.id;
+      categoryData = categoryDoc.exists ? {id: id, ...categoryDoc.data()} : null;
+    }
+
+    const publishedDate = artData.publishedDate;
+    let publishedDateFormated = null;
+    if (publishedDate) {
+      publishedDateFormated = publishedDate.toDate().toLocaleString();
+    }
+
+    const updatedDate = artData.updatedDate;
+    let updatedDateFormated = null;
+    if (updatedDate) {
+      updatedDateFormated = updatedDate.toDate().toLocaleString();
+    }
+
+    const articleData = {
+      id: articleDoc.id,
+      ...artData,
+      channel: channelData,
+      category: categoryData,
+      publishedDate: publishedDateFormated,
+      updatedDate: updatedDateFormated,
+    };
+
+    const success : SuccessResponseModel = {
+      statusCode: 200,
+      message: "success",
+      data: articleData,
+    };
+    response.send(success);
+  } catch (err) {
+    const errorMsg: BaseResponseModel = {
+      statusCode: 500,
+      message: String(err),
+    };
+    response.status(500).send(errorMsg);
+  }
+};
+
 export const createArticleController = async (request: Request, response: Response) => {
   try {
     const {title, content, category, cover} : ArticleRequestModel = request.body;
@@ -78,11 +147,7 @@ export const createArticleController = async (request: Request, response: Respon
       return;
     }
 
-    const userRecord = await getUserFromToken(request);
-
-    if (!(userRecord instanceof UserRecord)) {
-      throw Error("Invalid token");
-    }
+    const userRecord = await checkAuth(request);
 
     const channelRef = db.doc(`${Collection.users}/${userRecord.uid}`);
     const channelDoc = await channelRef.get();
@@ -139,7 +204,7 @@ export const createArticleController = async (request: Request, response: Respon
       });
   } catch (err) {
     const errorMsg: BaseResponseModel = {
-      statusCode: 404,
+      statusCode: 500,
       message: String(err),
     };
     response.status(500).send(errorMsg);
@@ -164,6 +229,18 @@ export const updateArticleController = async (request: Request, response: Respon
       const errorMsg: BaseResponseModel = {
         statusCode: 404,
         message: "Article not found",
+      };
+      response.status(404).send(errorMsg);
+      return;
+    }
+
+    // Authentication and Authorization
+    const userRecord = await checkAuth(request);
+    const articleData = articleDoc.data()!;
+    if (articleData.channel != userRecord.uid) {
+      const errorMsg: BaseResponseModel = {
+        statusCode: 401,
+        message: "Unauthorized",
       };
       response.status(404).send(errorMsg);
       return;
@@ -227,6 +304,18 @@ export const deleteArticleController = async (request: Request, response: Respon
       const errorMsg: BaseResponseModel = {
         statusCode: 404,
         message: "Article not found",
+      };
+      response.status(404).send(errorMsg);
+      return;
+    }
+
+    // Authentication and Authorization
+    const userRecord = await checkAuth(request);
+    const articleData = articleDoc.data()!;
+    if (articleData.channel != userRecord.uid) {
+      const errorMsg: BaseResponseModel = {
+        statusCode: 401,
+        message: "Unauthorized",
       };
       response.status(404).send(errorMsg);
       return;

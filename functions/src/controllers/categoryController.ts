@@ -11,6 +11,14 @@ export const createCategoryController = async (request: Request, response: Respo
       throw Error("Missing required field: name");
     }
     const categoriesRef = db.collection(Collection.categories);
+    const categoryDoc = await categoriesRef.get();
+    categoryDoc.docs.find((doc) => {
+      const catData = doc.data();
+      if (catData.name.trim() === name.trim()) {
+        throw Error("Category already exists");
+      }
+    });
+
     categoriesRef.add({
       name: name,
     }).then((doc) => {
@@ -26,7 +34,7 @@ export const createCategoryController = async (request: Request, response: Respo
   } catch (err) {
     const errRes : BaseResponseModel = {
       statusCode: 500,
-      message: err,
+      message: String(err),
     };
     response.send(errRes);
   }
