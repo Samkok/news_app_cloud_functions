@@ -46,11 +46,24 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Set GOOGLE_APPLICATION_CREDENTIALS based on environment
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS_UAT: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "Using production credentials"
+            echo "GOOGLE_APPLICATION_CREDENTIALS=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" >> $GITHUB_ENV
+          else
+            echo "Using uat credentials"
+            echo "GOOGLE_APPLICATION_CREDENTIALS=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }}" >> $GITHUB_ENV
+          fi
+
+
       # Choose environment based on branch
       - name: Select Firebase project environment
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/credentials.json
         run: |
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
             echo "Deploying to production environment"
@@ -67,5 +80,6 @@ jobs:
       - name: Deploy Firebase Functions
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
         run: npm run-script deploy
 
