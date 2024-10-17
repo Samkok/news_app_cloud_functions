@@ -57,14 +57,14 @@ jobs:
           else
             echo "Using uat environment variables"
             touch service-account-uat.json
-            echo ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }} > service-account-uat.json
+            echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }}" > service-account-uat.json
             echo "Github workspace : ${{ github.workspace }}"
             echo "Pwd: $(pwd)"
             pwd
             ls
             cat service-account-uat.json
             echo NODE_ENV=uat >> $GITHUB_ENV
-            echo GOOGLE_APPLICATION_CREDENTIALS_UAT=$(pwd)/service-account-uat.json >> $GITHUB_ENV
+            echo "GOOGLE_APPLICATION_CREDENTIALS_UAT=$(pwd)/service-account-uat.json" >> $GITHUB_ENV
             echo "STORAGE_BUCKET_UAT=${{ secrets.STORAGE_BUCKET_UAT }}" >> $GITHUB_ENV
             env
           fi
