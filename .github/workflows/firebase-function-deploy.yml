@@ -45,13 +45,15 @@ jobs:
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "Using production environment variables"
             echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > service-account-pro.json
-            echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/service-account-pro.json" >> $GITHUB_ENV
-            echo "STORAGE_BUCKET=${{ secrets.STORAGE_BUCKET_PRO }}" >> $GITHUB_ENV
+            echo NODE_ENV=pro >> $GITHUB_ENV
+            echo "GOOGLE_APPLICATION_CREDENTIALS_PRO=$(pwd)/service-account-pro.json" >> $GITHUB_ENV
+            echo "STORAGE_BUCKET_PRO=${{ secrets.STORAGE_BUCKET_PRO }}" >> $GITHUB_ENV
           else
             echo "Using uat environment variables"
             echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }}" > service-account-uat.json
-            echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/service-account-uat.json" >> $GITHUB_ENV
-            echo "STORAGE_BUCKET=${{ secrets.STORAGE_BUCKET_UAT }}" >> $GITHUB_ENV
+            echo NODE_ENV=uat >> $GITHUB_ENV
+            echo "GOOGLE_APPLICATION_CREDENTIALS_UAT=$(pwd)/service-account-uat.json" >> $GITHUB_ENV
+            echo "STORAGE_BUCKET_UAT=${{ secrets.STORAGE_BUCKET_UAT }}" >> $GITHUB_ENV
           fi
 
       - name: Select Firebase project environment
@@ -60,10 +62,10 @@ jobs:
         run: |
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
             echo "Deploying to production environment"
-            firebase use --add default
+            firebase use default
           elif [ "${{ github.ref }}" == "refs/heads/uat" ]; then
             echo "Deploying to uat environment"
-            firebase use --add uat
+            firebase use uat
           else
             echo "No environment matched for this branch"
             exit 1
