@@ -44,16 +44,16 @@ jobs:
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "Using production environment variables"
-            echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > service-account-pro.json
+            echo ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }} > service-account-pro.json
             echo NODE_ENV=pro >> $GITHUB_ENV
-            echo "GOOGLE_APPLICATION_CREDENTIALS_PRO=${{ github.workspace }}/service-account-pro.json" >> $GITHUB_ENV
-            echo "STORAGE_BUCKET_PRO=${{ secrets.STORAGE_BUCKET_PRO }}" >> $GITHUB_ENV
+            echo GOOGLE_APPLICATION_CREDENTIALS_PRO=${{ github.workspace }}/service-account-pro.json >> $GITHUB_ENV
+            echo STORAGE_BUCKET_PRO=${{ secrets.STORAGE_BUCKET_PRO }} >> $GITHUB_ENV
           else
             echo "Using uat environment variables"
-            echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }}" > service-account-uat.json
+            echo ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }} > service-account-uat.json
             echo NODE_ENV=uat >> $GITHUB_ENV
-            echo "GOOGLE_APPLICATION_CREDENTIALS_UAT=${{ github.workspace }}/service-account-uat.json" >> $GITHUB_ENV
-            echo "STORAGE_BUCKET_UAT=${{ secrets.STORAGE_BUCKET_UAT }}" >> $GITHUB_ENV
+            echo GOOGLE_APPLICATION_CREDENTIALS_UAT=${{ github.workspace }}/service-account-uat.json >> $GITHUB_ENV
+            echo STORAGE_BUCKET_UAT=${{ secrets.STORAGE_BUCKET_UAT }} >> $GITHUB_ENV
           fi
 
       - name: Select Firebase project environment
