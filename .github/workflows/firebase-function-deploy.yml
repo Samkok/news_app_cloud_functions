@@ -1,14 +1,12 @@
 name: Deploy Firebase Functions
 
-# Controls when the workflow will run
 on:
   push:
     branches:
       - main
       - uat
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch:
 
-# Workflow jobs
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -18,70 +16,59 @@ jobs:
         working-directory: functions
 
     steps:
-      # Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Set up Node.js environment
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'  # Use the Node.js version that matches Firebase functions
+          node-version: '18'
 
       - name: Set GOOGLE_APPLICATION_CREDENTIALS for uat
         run: |
-          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }}" > ${{ github.workspace }}/credentials.json
-        if: github.ref == 'refs/heads/uat' # Use staging branch for uat
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }}" > ${{ github.workspace }}/credentials-uat.json
+        if: github.ref == 'refs/heads/uat'
   
       - name: Set GOOGLE_APPLICATION_CREDENTIALS for Production
         run: |
-          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > ${{ github.workspace }}/credentials.json
-        if: github.ref == 'refs/heads/main' # Use main branch for production
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > ${{ github.workspace }}/credentials-pro.json
+        if: github.ref == 'refs/heads/main'
 
-      # Install Firebase CLI globally
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
-      # Install dependencies
       - name: Install dependencies
         run: npm install
 
-      - name: Set GOOGLE_APPLICATION_CREDENTIALS based on environment
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS_UAT: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }}
-          GOOGLE_APPLICATION_CREDENTIALS_PRO: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+      - name: Set Environment Variables for Storage and Credentials
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "Using production credentials"
+            echo "Using production environment variables"
             echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > service-account-pro.json
-            echo "GOOGLE_APPLICATION_CREDENTIALS_PRO=$(pwd)/service-account-pro.json" >> $GITHUB_ENV
+            echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/service-account-pro.json" >> $GITHUB_ENV
+            echo "STORAGE_BUCKET=${{ secrets.STORAGE_BUCKET_PRO }}" >> $GITHUB_ENV
           else
-            echo "Using uat credentials"
+            echo "Using uat environment variables"
             echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }}" > service-account-uat.json
-            echo "GOOGLE_APPLICATION_CREDENTIALS_UAT=$(pwd)/service-account-uat.json" >> $GITHUB_ENV
+            echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/service-account-uat.json" >> $GITHUB_ENV
+            echo "STORAGE_BUCKET=${{ secrets.STORAGE_BUCKET_UAT }}" >> $GITHUB_ENV
           fi
 
-
-      # Choose environment based on branch
       - name: Select Firebase project environment
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: |
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
             echo "Deploying to production environment"
-            firebase use default
+            firebase use --add default
           elif [ "${{ github.ref }}" == "refs/heads/uat" ]; then
             echo "Deploying to uat environment"
-            firebase use uat
+            firebase use --add uat
           else
             echo "No environment matched for this branch"
             exit 1
-          fi
 
-      # Deploy Firebase Functions
       - name: Deploy Firebase Functions
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-        run: |
-          NODE_ENV=uat npm run-script deploy
-
+        run: npm run deploy
