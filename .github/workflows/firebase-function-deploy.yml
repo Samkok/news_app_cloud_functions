@@ -64,7 +64,7 @@ jobs:
             ls
             cat service-account-uat.json
             echo NODE_ENV=uat >> $GITHUB_ENV
-            echo "GOOGLE_APPLICATION_CREDENTIALS_UAT=/home/runner/work/news_app_cloud_functions/news_app_cloud_functions/functions/service-account-uat.json" >> $GITHUB_ENV
+            echo GOOGLE_APPLICATION_CREDENTIALS_UAT=/home/runner/work/news_app_cloud_functions/news_app_cloud_functions/functions/service-account-uat.json >> $GITHUB_ENV
             echo ${{ secrets.STORAGE_BUCKET_UAT }}
             echo "STORAGE_BUCKET_UAT=${{ secrets.STORAGE_BUCKET_UAT }}" >> $GITHUB_ENV
             env
