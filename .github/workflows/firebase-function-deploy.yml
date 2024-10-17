@@ -65,6 +65,7 @@ jobs:
             cat service-account-uat.json
             echo NODE_ENV=uat >> $GITHUB_ENV
             echo "GOOGLE_APPLICATION_CREDENTIALS_UAT=$(pwd)/service-account-uat.json" >> $GITHUB_ENV
+            cat $STORAGE_BUCKET_UAT
             echo "STORAGE_BUCKET_UAT=$STORAGE_BUCKET_UAT" >> $GITHUB_ENV
             env
           fi
