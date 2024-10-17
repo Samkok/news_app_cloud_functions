@@ -41,20 +41,28 @@ jobs:
         run: npm install
 
       - name: Set Environment Variables for Storage and Credentials
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS_PRO: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          GOOGLE_APPLICATION_CREDENTIALS_UAT: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }}
+          STORAGE_BUCKET_PRO: ${{ secrets.STORAGE_BUCKET_PRO }}
+          STORAGE_BUCKET_UAT: ${{ secrets.STORAGE_BUCKET_UAT }}
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "Using production environment variables"
+            touch service-account-pro.json
             echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > service-account-pro.json
             echo NODE_ENV=pro >> $GITHUB_ENV
             echo "GOOGLE_APPLICATION_CREDENTIALS_PRO=${{ github.workspace }}/service-account-pro.json" >> $GITHUB_ENV
             echo "STORAGE_BUCKET_PRO=${{ secrets.STORAGE_BUCKET_PRO }}" >> $GITHUB_ENV
           else
             echo "Using uat environment variables"
+            touch service-account-uat.json
             echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UAT }}" > service-account-uat.json
             echo "Github workspace : ${{ github.workspace }}"
             echo "Pwd: $(pwd)"
+            ls
             echo NODE_ENV=uat >> $GITHUB_ENV
-            echo "GOOGLE_APPLICATION_CREDENTIALS_UAT=service-account-uat.json" >> $GITHUB_ENV
+            echo "GOOGLE_APPLICATION_CREDENTIALS_UAT=$(pwd)/service-account-uat.json" >> $GITHUB_ENV
             echo "STORAGE_BUCKET_UAT=${{ secrets.STORAGE_BUCKET_UAT }}" >> $GITHUB_ENV
           fi
 
