@@ -92,4 +92,5 @@ jobs:
           STORAGE_BUCKET_PRO: ${{ secrets.STORAGE_BUCKET_PRO }}
           STORAGE_BUCKET_UAT: ${{ secrets.STORAGE_BUCKET_UAT }}
         run: |
+          env
           npm run deploy
