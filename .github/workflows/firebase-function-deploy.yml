@@ -84,6 +84,13 @@ jobs:
             exit 1
           fi
 
+      - name: Debug Environment Variables
+        run: |
+          echo "GOOGLE_APPLICATION_CREDENTIALS_UAT: $GOOGLE_APPLICATION_CREDENTIALS_UAT"
+          echo "GOOGLE_APPLICATION_CREDENTIALS_PRO: $GOOGLE_APPLICATION_CREDENTIALS_PRO"
+          echo "STORAGE_BUCKET_UAT: $STORAGE_BUCKET_UAT"
+          echo "STORAGE_BUCKET_PRO: $STORAGE_BUCKET_PRO"
+        
       - name: Deploy Firebase Functions
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
