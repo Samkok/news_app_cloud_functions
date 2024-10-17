@@ -10,6 +10,7 @@ let serviceAccount: admin.ServiceAccount;
 let storageBucket;
 
 console.log("NODE_ENV:", env);
+console.log("ALL ENV:", process.env);
 console.log("GOOGLE_APPLICATION_CREDENTIALS_UAT:", process.env.GOOGLE_APPLICATION_CREDENTIALS_UAT);
 console.log("GOOGLE_APPLICATION_CREDENTIALS_PRO:", process.env.GOOGLE_APPLICATION_CREDENTIALS_PRO);
 console.log("STORAGE_BUCKET_UAT:", process.env.STORAGE_BUCKET_UAT);
